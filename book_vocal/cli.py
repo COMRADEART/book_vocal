@@ -30,8 +30,18 @@ def _load_voice_profile(path: str | Path) -> VoiceProfile:
     if not profile_path.exists():
         raise SystemExit(f"Voice profile not found: {profile_path}")
 
-    payload = json.loads(profile_path.read_text(encoding="utf-8"))
-    return VoiceProfile.from_dict(payload)
+    try:
+        payload = json.loads(profile_path.read_text(encoding="utf-8"))
+        profile = VoiceProfile.from_dict(payload)
+    except (json.JSONDecodeError, ValueError, TypeError, KeyError) as exc:
+        raise SystemExit(f"Invalid voice profile at {profile_path}: {exc}") from exc
+
+    if not profile.languages:
+        raise SystemExit(
+            f"Voice profile at {profile_path} must declare at least one language (languages=[...])."
+        )
+
+    return profile
 
 
 def _prompt_with_default(label: str, default: str | None = None) -> str:
@@ -76,6 +86,7 @@ def edit_voice_profile(path: str | Path) -> VoiceProfile:
             updated_clips[language] = Path(clip_input)
     profile.sample_clips = updated_clips
 
+    profile_path.parent.mkdir(parents=True, exist_ok=True)
     profile_path.write_text(
         json.dumps(
             {
