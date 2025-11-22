@@ -105,6 +105,8 @@ def edit_voice_profile(path: str | Path) -> VoiceProfile:
 
     print(f"Saved voice profile to {profile_path}")
     return profile
+    payload = json.loads(profile_path.read_text(encoding="utf-8"))
+    return VoiceProfile.from_dict(payload)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -165,6 +167,7 @@ def main(argv: list[str] | None = None) -> None:
             voice_profile = edit_voice_profile(args.voice_profile)
         else:
             voice_profile = _load_voice_profile(args.voice_profile)
+    voice_profile = _load_voice_profile(args.voice_profile) if args.voice_profile else None
 
     assistant = BookAssistant.from_file(book_path)
 
