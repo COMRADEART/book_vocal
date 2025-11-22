@@ -30,6 +30,81 @@ def _load_voice_profile(path: str | Path) -> VoiceProfile:
     if not profile_path.exists():
         raise SystemExit(f"Voice profile not found: {profile_path}")
 
+    try:
+        payload = json.loads(profile_path.read_text(encoding="utf-8"))
+        profile = VoiceProfile.from_dict(payload)
+    except (json.JSONDecodeError, ValueError, TypeError, KeyError) as exc:
+        raise SystemExit(f"Invalid voice profile at {profile_path}: {exc}") from exc
+
+    if not profile.languages:
+        raise SystemExit(
+            f"Voice profile at {profile_path} must declare at least one language (languages=[...])."
+        )
+
+    return profile
+
+
+def _prompt_with_default(label: str, default: str | None = None) -> str:
+    suffix = f" [{default}]" if default else ""
+    return input(f"{label}{suffix}: ").strip() or (default or "")
+
+
+def edit_voice_profile(path: str | Path) -> VoiceProfile:
+    """Interactive editor for voice profiles.
+
+    This lightweight interface keeps configuration simple for users who want to
+    tweak their multilingual voice without hand-editing JSON. Existing values
+    are shown as defaults; pressing enter retains them.
+    """
+
+    profile_path = Path(path)
+    if profile_path.exists():
+        payload = json.loads(profile_path.read_text(encoding="utf-8"))
+        profile = VoiceProfile.from_dict(payload)
+    else:
+        profile = VoiceProfile(name="", languages=[], style="natural and warm", sample_clips={})
+
+    print("\nEditing voice profile (leave blank to keep current values).\n")
+    profile.name = _prompt_with_default("Name", profile.name or "My Voice")
+    languages_raw = _prompt_with_default(
+        "Languages (comma-separated codes)", ", ".join(profile.languages) if profile.languages else "en"
+    )
+    profile.languages = [lang.strip() for lang in languages_raw.split(",") if lang.strip()]
+    profile.style = _prompt_with_default("Style", profile.style)
+    profile.articulation_notes = _prompt_with_default(
+        "Articulation notes", profile.articulation_notes or ""
+    ) or None
+    profile.warmup_phrase = _prompt_with_default("Warmup phrase", profile.warmup_phrase or "") or None
+
+    updated_clips: dict[str, Path] = {}
+    for language in profile.languages:
+        existing_clip = profile.sample_clips.get(language)
+        clip_input = _prompt_with_default(
+            f"Sample clip for '{language}'", str(existing_clip) if existing_clip else ""
+        )
+        if clip_input:
+            updated_clips[language] = Path(clip_input)
+    profile.sample_clips = updated_clips
+
+    profile_path.parent.mkdir(parents=True, exist_ok=True)
+    profile_path.write_text(
+        json.dumps(
+            {
+                "name": profile.name,
+                "languages": profile.languages,
+                "style": profile.style,
+                "sample_clips": {k: str(v) for k, v in profile.sample_clips.items()},
+                "articulation_notes": profile.articulation_notes,
+                "warmup_phrase": profile.warmup_phrase,
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    print(f"Saved voice profile to {profile_path}")
+    return profile
     payload = json.loads(profile_path.read_text(encoding="utf-8"))
     return VoiceProfile.from_dict(payload)
 
@@ -70,6 +145,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional JSON file describing a personalized, multilingual voice.",
     )
     parser.add_argument(
+        "--edit-voice-profile",
+        action="store_true",
+        help="Launch an interactive editor for the specified voice profile before running actions.",
+    )
+    parser.add_argument(
         "--language",
         metavar="LANG",
         help="Target language code for narration (defaults to voice profile primary).",
@@ -81,6 +161,12 @@ def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
     book_path = _validate_book_path(args.book)
+    voice_profile = None
+    if args.voice_profile:
+        if args.edit_voice_profile:
+            voice_profile = edit_voice_profile(args.voice_profile)
+        else:
+            voice_profile = _load_voice_profile(args.voice_profile)
     voice_profile = _load_voice_profile(args.voice_profile) if args.voice_profile else None
 
     assistant = BookAssistant.from_file(book_path)

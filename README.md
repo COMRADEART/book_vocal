@@ -35,6 +35,14 @@ Pass the profile to the CLI to produce a narration prompt that downstream TTS sy
 python -m book_vocal.cli --book novel.txt --question "Who rescues the captain?" --voice-profile voice.json --language fr
 ```
 
+Want to tweak the voice without hand-editing JSON? Launch the built-in editor:
+
+```bash
+python -m book_vocal.cli --book novel.txt --voice-profile voice.json --edit-voice-profile --question "Who rescues the captain?"
+```
+
+The prompts show current values as defaults so you can quickly adjust the style, languages, clips, or notes and continue with the requested action.
+
 ## Programmatic usage
 
 ```python
