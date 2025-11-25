@@ -5,6 +5,7 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
+from typing import List, Optional, Sequence, Tuple, Union
 from typing import List, Optional, Sequence, Union
 from typing import List, Sequence
 
@@ -151,6 +152,7 @@ class BookAssistant:
         top = sorted(scored[:max_sentences], key=lambda result: result.index)
         return top
 
+    def character_glossary(self, limit: int = 10, min_occurrences: int = 2) -> List[Tuple[str, int]]:
     def character_glossary(self, limit: int = 10, min_occurrences: int = 2) -> list[tuple[str, int]]:
         """Extract a simple character glossary using capitalized words.
 
