@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Iterable, Optional, Sequence, Union
+from typing import Dict, Iterable, Sequence
 
 
 @dataclass
@@ -20,6 +21,8 @@ class VoiceProfile:
     sample_clips: Dict[str, Path] = field(default_factory=dict)
     articulation_notes: Optional[str] = None
     warmup_phrase: Optional[str] = None
+    articulation_notes: str | None = None
+    warmup_phrase: str | None = None
 
     def __post_init__(self) -> None:
         self.languages = list(self.languages)
@@ -49,6 +52,7 @@ class VoiceProfile:
         return self.languages[0]
 
     def clip_for_language(self, language: Optional[str] = None) -> Optional[Path]:
+    def clip_for_language(self, language: str | None = None) -> Path | None:
         """Return the most relevant sample clip for the requested language.
 
         Falls back to the default language when a language-specific clip is not
@@ -80,6 +84,7 @@ class VoiceProfile:
         return "\n".join(lines)
 
     def narration_prompt(self, script: str, language: Optional[str] = None) -> str:
+    def narration_prompt(self, script: str, language: str | None = None) -> str:
         """Generate a structured prompt describing how to voice a script."""
 
         target_language = language or self.default_language()
@@ -110,6 +115,11 @@ def build_voice_profile(
     style: str = "natural and warm",
     articulation_notes: Optional[str] = None,
     warmup_phrase: Optional[str] = None,
+    sample_clip: str | Path | None = None,
+    *,
+    style: str = "natural and warm",
+    articulation_notes: str | None = None,
+    warmup_phrase: str | None = None,
 ) -> VoiceProfile:
     """Quick factory for single-clip profiles.
 

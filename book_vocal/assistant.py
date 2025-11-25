@@ -6,6 +6,8 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Sequence, Union
+from typing import List, Sequence
 
 from .voice import VoiceProfile
 
@@ -60,6 +62,7 @@ class BookAssistant:
 
     @classmethod
     def from_file(cls, path: Union[str, Path]) -> "BookAssistant":
+    def from_file(cls, path: str | Path) -> "BookAssistant":
         path = Path(path)
         text = path.read_text(encoding="utf-8")
         return cls(text)
@@ -150,6 +153,7 @@ class BookAssistant:
         return top
 
     def character_glossary(self, limit: int = 10, min_occurrences: int = 2) -> List[Tuple[str, int]]:
+    def character_glossary(self, limit: int = 10, min_occurrences: int = 2) -> list[tuple[str, int]]:
         """Extract a simple character glossary using capitalized words.
 
         The heuristic focuses on repeated capitalized words that are unlikely to
@@ -207,6 +211,7 @@ class BookAssistant:
         voice: VoiceProfile,
         *,
         language: Optional[str] = None,
+        language: str | None = None,
         context_window: int = 1,
     ) -> NarrationPlan:
         """Build a multilingual narration plan for the given question.
@@ -299,6 +304,7 @@ class BookAssistant:
 
 
 def load_book(path: Union[str, Path]) -> BookAssistant:
+def load_book(path: str | Path) -> BookAssistant:
     """Convenience loader that mirrors :meth:`BookAssistant.from_file`."""
 
     return BookAssistant.from_file(path)
