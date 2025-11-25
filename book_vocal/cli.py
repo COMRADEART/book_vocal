@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 from .assistant import BookAssistant
@@ -157,6 +158,16 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args_list = argv if argv is not None else sys.argv[1:]
+    if not args_list:
+        parser.print_help()
+        return 0
+
+    args = parser.parse_args(args_list)
+    if args.edit_voice_profile and not args.voice_profile:
+        raise SystemExit("--edit-voice-profile requires --voice-profile")
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -165,6 +176,12 @@ def main(argv: list[str] | None = None) -> None:
     if args.voice_profile:
         if args.edit_voice_profile:
             voice_profile = edit_voice_profile(args.voice_profile)
+            if not voice_profile.languages:
+                raise SystemExit(
+                    "Voice profile must declare at least one language (languages=[...])."
+                )
+        else:
+            voice_profile = _load_voice_profile(args.voice_profile)
         else:
             voice_profile = _load_voice_profile(args.voice_profile)
     voice_profile = _load_voice_profile(args.voice_profile) if args.voice_profile else None
@@ -217,6 +234,7 @@ def main(argv: list[str] | None = None) -> None:
 
     if not any_action:
         parser.print_help()
+    return 0
 
 
 if __name__ == "__main__":  # pragma: no cover - manual invocation entrypoint
