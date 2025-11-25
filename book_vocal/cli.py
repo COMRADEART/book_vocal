@@ -5,6 +5,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import List, Optional, Union
 
 from .assistant import BookAssistant
 from .voice import VoiceProfile
@@ -19,6 +20,7 @@ def _print_section(title: str) -> None:
     print(SECTION_SEPARATOR)
 
 
+def _validate_book_path(path: Union[Path, str]) -> Path:
 def _validate_book_path(path: str | Path) -> Path:
     resolved = Path(path)
     if not resolved.exists():
@@ -26,6 +28,7 @@ def _validate_book_path(path: str | Path) -> Path:
     return resolved
 
 
+def _load_voice_profile(path: Union[Path, str]) -> VoiceProfile:
 def _load_voice_profile(path: str | Path) -> VoiceProfile:
     profile_path = Path(path)
     if not profile_path.exists():
@@ -45,11 +48,13 @@ def _load_voice_profile(path: str | Path) -> VoiceProfile:
     return profile
 
 
+def _prompt_with_default(label: str, default: Optional[str] = None) -> str:
 def _prompt_with_default(label: str, default: str | None = None) -> str:
     suffix = f" [{default}]" if default else ""
     return input(f"{label}{suffix}: ").strip() or (default or "")
 
 
+def edit_voice_profile(path: Union[Path, str]) -> VoiceProfile:
 def edit_voice_profile(path: str | Path) -> VoiceProfile:
     """Interactive editor for voice profiles.
 
@@ -158,6 +163,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def main(argv: Optional[List[str]] = None) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args_list = argv if argv is not None else sys.argv[1:]

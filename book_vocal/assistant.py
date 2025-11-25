@@ -5,6 +5,7 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
+from typing import List, Optional, Sequence, Union
 from typing import List, Sequence
 
 from .voice import VoiceProfile
@@ -59,6 +60,7 @@ class BookAssistant:
         self._idf = self._compute_idf(self._tokenized)
 
     @classmethod
+    def from_file(cls, path: Union[str, Path]) -> "BookAssistant":
     def from_file(cls, path: str | Path) -> "BookAssistant":
         path = Path(path)
         text = path.read_text(encoding="utf-8")
@@ -206,6 +208,7 @@ class BookAssistant:
         question: str,
         voice: VoiceProfile,
         *,
+        language: Optional[str] = None,
         language: str | None = None,
         context_window: int = 1,
     ) -> NarrationPlan:
@@ -298,6 +301,7 @@ class BookAssistant:
         return "\n".join(lines)
 
 
+def load_book(path: Union[str, Path]) -> BookAssistant:
 def load_book(path: str | Path) -> BookAssistant:
     """Convenience loader that mirrors :meth:`BookAssistant.from_file`."""
 
