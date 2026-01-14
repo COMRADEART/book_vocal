@@ -5,7 +5,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from .assistant import BookAssistant
 from .voice import VoiceProfile
@@ -78,7 +78,7 @@ def edit_voice_profile(path: Union[Path, str]) -> VoiceProfile:
     ) or None
     profile.warmup_phrase = _prompt_with_default("Warmup phrase", profile.warmup_phrase or "") or None
 
-    updated_clips: dict[str, Path] = {}
+    updated_clips: Dict[str, Path] = {}
     for language in profile.languages:
         existing_clip = profile.sample_clips.get(language)
         clip_input = _prompt_with_default(
