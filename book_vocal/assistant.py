@@ -6,8 +6,6 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple, Union
-from typing import List, Optional, Sequence, Union
-from typing import List, Sequence
 
 from .voice import VoiceProfile
 
@@ -62,7 +60,6 @@ class BookAssistant:
 
     @classmethod
     def from_file(cls, path: Union[str, Path]) -> "BookAssistant":
-    def from_file(cls, path: str | Path) -> "BookAssistant":
         path = Path(path)
         text = path.read_text(encoding="utf-8")
         return cls(text)
@@ -152,8 +149,37 @@ class BookAssistant:
         top = sorted(scored[:max_sentences], key=lambda result: result.index)
         return top
 
+    def summarize_span(
+        self, start: int, end: int, max_sentences: int = 3
+    ) -> List[SummaryResult]:
+        """Summarize a specific sentence range in the book."""
+
+        start = max(0, start)
+        end = min(len(self.sentences), end)
+        if start >= end:
+            return []
+
+        span_sentences = self.sentences[start:end]
+        span_tokens = self._tokenized[start:end]
+        vocabulary = Counter(token for tokens in span_tokens for token in tokens)
+        candidate_keywords = [word for word, _ in vocabulary.most_common(50) if len(word) > 3]
+        scored: List[SummaryResult] = []
+        for offset, tokens in enumerate(span_tokens):
+            primary_score = self._tfidf_score(candidate_keywords, tokens)
+            position_bonus = 0.2 * (1 - offset / max(len(span_sentences), 1))
+            score = primary_score + position_bonus
+            scored.append(
+                SummaryResult(
+                    sentence=span_sentences[offset],
+                    index=start + offset,
+                    score=score,
+                )
+            )
+        scored.sort(key=lambda result: result.score, reverse=True)
+        top = sorted(scored[:max_sentences], key=lambda result: result.index)
+        return top
+
     def character_glossary(self, limit: int = 10, min_occurrences: int = 2) -> List[Tuple[str, int]]:
-    def character_glossary(self, limit: int = 10, min_occurrences: int = 2) -> list[tuple[str, int]]:
         """Extract a simple character glossary using capitalized words.
 
         The heuristic focuses on repeated capitalized words that are unlikely to
@@ -211,7 +237,6 @@ class BookAssistant:
         voice: VoiceProfile,
         *,
         language: Optional[str] = None,
-        language: str | None = None,
         context_window: int = 1,
     ) -> NarrationPlan:
         """Build a multilingual narration plan for the given question.
@@ -239,7 +264,7 @@ class BookAssistant:
             source_indices=source_indices,
         )
 
-    def top_keywords(self, limit: int = 10) -> List[tuple[str, float]]:
+    def top_keywords(self, limit: int = 10) -> List[Tuple[str, float]]:
         """Return the most informative keywords ranked by IDF-weighted frequency."""
 
         stopwords = {
@@ -304,7 +329,6 @@ class BookAssistant:
 
 
 def load_book(path: Union[str, Path]) -> BookAssistant:
-def load_book(path: str | Path) -> BookAssistant:
     """Convenience loader that mirrors :meth:`BookAssistant.from_file`."""
 
     return BookAssistant.from_file(path)

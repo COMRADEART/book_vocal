@@ -73,3 +73,16 @@ voice = VoiceProfile(
 plan = assistant.narration_plan("Who rescues the captain?", voice, language="fr")
 print(plan.voice_prompt)
 ```
+
+## Web app (upload + bubble memory recap)
+
+Run the optional Flask web app to upload a book, ask questions, read in chunks, and get a "bubble memory" recap of where you left off:
+
+```bash
+pip install flask
+python -m book_vocal.webapp
+```
+
+Open <http://localhost:5000> and upload a UTF-8 `.txt` file. The app keeps a small bubble memory (last reading position, last question, and a short recap) so you can stop mid-way and resume with a brief summary of what was happening.
+
+Voice presets in the UI include ChatGPT- and Gemini-inspired references, and you can override the narration style per session.

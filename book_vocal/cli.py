@@ -5,7 +5,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from .assistant import BookAssistant
 from .voice import VoiceProfile
@@ -21,7 +21,6 @@ def _print_section(title: str) -> None:
 
 
 def _validate_book_path(path: Union[Path, str]) -> Path:
-def _validate_book_path(path: str | Path) -> Path:
     resolved = Path(path)
     if not resolved.exists():
         raise SystemExit(f"Book file not found: {resolved}")
@@ -29,7 +28,6 @@ def _validate_book_path(path: str | Path) -> Path:
 
 
 def _load_voice_profile(path: Union[Path, str]) -> VoiceProfile:
-def _load_voice_profile(path: str | Path) -> VoiceProfile:
     profile_path = Path(path)
     if not profile_path.exists():
         raise SystemExit(f"Voice profile not found: {profile_path}")
@@ -49,13 +47,11 @@ def _load_voice_profile(path: str | Path) -> VoiceProfile:
 
 
 def _prompt_with_default(label: str, default: Optional[str] = None) -> str:
-def _prompt_with_default(label: str, default: str | None = None) -> str:
     suffix = f" [{default}]" if default else ""
     return input(f"{label}{suffix}: ").strip() or (default or "")
 
 
 def edit_voice_profile(path: Union[Path, str]) -> VoiceProfile:
-def edit_voice_profile(path: str | Path) -> VoiceProfile:
     """Interactive editor for voice profiles.
 
     This lightweight interface keeps configuration simple for users who want to
@@ -82,7 +78,7 @@ def edit_voice_profile(path: str | Path) -> VoiceProfile:
     ) or None
     profile.warmup_phrase = _prompt_with_default("Warmup phrase", profile.warmup_phrase or "") or None
 
-    updated_clips: dict[str, Path] = {}
+    updated_clips: Dict[str, Path] = {}
     for language in profile.languages:
         existing_clip = profile.sample_clips.get(language)
         clip_input = _prompt_with_default(
@@ -111,8 +107,6 @@ def edit_voice_profile(path: str | Path) -> VoiceProfile:
 
     print(f"Saved voice profile to {profile_path}")
     return profile
-    payload = json.loads(profile_path.read_text(encoding="utf-8"))
-    return VoiceProfile.from_dict(payload)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -164,7 +158,6 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args_list = argv if argv is not None else sys.argv[1:]
     if not args_list:
@@ -174,9 +167,6 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(args_list)
     if args.edit_voice_profile and not args.voice_profile:
         raise SystemExit("--edit-voice-profile requires --voice-profile")
-def main(argv: list[str] | None = None) -> None:
-    parser = build_parser()
-    args = parser.parse_args(argv)
     book_path = _validate_book_path(args.book)
     voice_profile = None
     if args.voice_profile:
@@ -188,9 +178,6 @@ def main(argv: list[str] | None = None) -> None:
                 )
         else:
             voice_profile = _load_voice_profile(args.voice_profile)
-        else:
-            voice_profile = _load_voice_profile(args.voice_profile)
-    voice_profile = _load_voice_profile(args.voice_profile) if args.voice_profile else None
 
     assistant = BookAssistant.from_file(book_path)
 

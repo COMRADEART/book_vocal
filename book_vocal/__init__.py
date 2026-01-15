@@ -20,7 +20,6 @@ if __name__ == "__main__":
     from book_vocal.cli import main
 
     raise SystemExit(main())
-"""Book Vocal: lightweight tools for book-focused text assistance."""
 
 from .assistant import BookAssistant, NarrationPlan, SearchResult, SummaryResult
 from .voice import VoiceProfile, build_voice_profile
