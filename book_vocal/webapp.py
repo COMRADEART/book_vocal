@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
+from .assistant import BookAssistant, SummaryResult
 from .memory import BubbleMemory, BubbleMemoryStore, build_memory, compute_book_id, default_state_dir
 from .voice import VoiceProfile
-
-if TYPE_CHECKING:
-    from .assistant import BookAssistant, SummaryResult
 
 try:
     from flask import Flask, redirect, render_template_string, request, url_for
@@ -55,7 +53,7 @@ def _load_book_text(book_id: str) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def _format_summary(items: List["SummaryResult"]) -> str:
+def _format_summary(items: List[SummaryResult]) -> str:
     return " ".join(item.sentence for item in items)
 
 
@@ -74,7 +72,7 @@ def _build_voice_profile(
 def _update_memory(
     store: BubbleMemoryStore,
     book_id: str,
-    assistant: "BookAssistant",
+    assistant: BookAssistant,
     *,
     last_index: int,
     last_question: Optional[str],
@@ -93,14 +91,6 @@ def _update_memory(
 
 def create_app() -> "Flask":
     _ensure_flask()
-    try:
-        from .assistant import BookAssistant
-    except (SyntaxError, IndentationError) as exc:
-        raise SystemExit(
-            "BookAssistant failed to import. Please ensure your local checkout is up to date and "
-            "uses compatible typing (no `|` union syntax on Python <3.10)."
-        ) from exc
-
     app = Flask(__name__)
     store = BubbleMemoryStore(MEMORY_PATH)
 

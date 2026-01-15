@@ -22,9 +22,8 @@ if __name__ == "__main__":
 
     raise SystemExit(main())
 
-if TYPE_CHECKING:
-    from .assistant import BookAssistant, NarrationPlan, SearchResult, SummaryResult
-    from .voice import VoiceProfile
+from .assistant import BookAssistant, NarrationPlan, SearchResult, SummaryResult
+from .voice import VoiceProfile, build_voice_profile
 
 __all__ = [
     "BookAssistant",
@@ -34,20 +33,3 @@ __all__ = [
     "VoiceProfile",
     "build_voice_profile",
 ]
-
-
-def __getattr__(name: str):
-    if name in {"BookAssistant", "NarrationPlan", "SearchResult", "SummaryResult"}:
-        from .assistant import BookAssistant, NarrationPlan, SearchResult, SummaryResult
-
-        return {
-            "BookAssistant": BookAssistant,
-            "NarrationPlan": NarrationPlan,
-            "SearchResult": SearchResult,
-            "SummaryResult": SummaryResult,
-        }[name]
-    if name in {"VoiceProfile", "build_voice_profile"}:
-        from .voice import VoiceProfile, build_voice_profile
-
-        return {"VoiceProfile": VoiceProfile, "build_voice_profile": build_voice_profile}[name]
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
