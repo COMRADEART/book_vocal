@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 if __name__ == "__main__":
     # Allow direct execution without requiring installation by temporarily
